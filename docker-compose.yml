@@ -1,19 +1,10 @@
 version: "3.9"
-services:
-  backend:
-    build: ./backend
-    container_name: scb-backend
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./backend/.env
-    depends_on:
-      - db
 
+services:
   db:
-    image: postgres:15
+    image: postgres:16
     container_name: scb-db
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_USER: scb_user
       POSTGRES_PASSWORD: scb_password
@@ -22,6 +13,27 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scb_user -d scb_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: scb-backend
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
 
 volumes:
   postgres_data:

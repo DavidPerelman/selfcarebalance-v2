@@ -28,3 +28,9 @@ watchfiles==1.1.0
 websockets==15.0.1
 pytest
 httpx
+authlib
+python-jose[cryptography]
+psycopg[binary]
+pydantic
+pydantic[email]
+psycopg2-binary
